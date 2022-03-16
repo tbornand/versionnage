@@ -17,6 +17,27 @@ library(gtools) #smartbind fusion de df
 BE02_18 <- read_sav("ESS1-9e01_1.sav")
 
 
+
+# creation des indices ----------------------------------------------------
+
+
+#'incdice conifance dans les insitutions "trstinst": moyenne des 4 institutions et valeurs supérieure à 5 (échelle 0 à 10)
+# - parlement fédéral "trstprl"
+# - justice "trstlgl"
+# - femmes/hommes pol "trstplt"
+# - les partis pol "trstprt"
+
+#moyenne des 4 institutions
+library(tidyverse)
+BE <- transform( BE,
+                 trstinst.4m = rowMeans(subset(BE, select = c(trstprl,
+                                                              trstplt,
+                                                              trstprt,
+                                                              trstlgl)), na.rm = FALSE))
+
+BE$trstinst.4d <-cut(BE$trstinst.4m,c(0,5,10), include.lowest = TRUE) #indice moyen dichotomisé <=5; >5
+
+
 #B) créer la variable "regbe" pour regions Belge. Cette variable compile l'info sous deux variables différentes dans le 
 # data frame "cregion" et "regionbe"
 
@@ -31,27 +52,31 @@ BE02_18$regbe <- set_labels(BE02_18$regbe, labels = c("Bruxelles"=1, "Flandre"=2
 library(sjmisc)
 frq(BE02_18$regbe)
 
+###4) résultat longitudinal "satisfaction démocratique"  
 
+sat.wal<-svyby(~stfdem.d, ~reg_ess, BEw, svyciprop, vartype="ci")
+sat.bel<-svyby(~stfdem.d, ~cntry_ess, BEw, svyciprop, vartype="ci")
 
+library(gtools) # fusion des 2 df à l'aide de smartbind
+sat<-smartbind(sat.wal, sat.bel)
 
-# creation des indices ----------------------------------------------------
+#ajoute les variables année, région, et recalcul les indice en % (2 digits)
+sat$year <- c("2004",   # ajoute la variable année
+              "2006", 
+              "2008", 
+              "2010", 
+              "2012",
+              "2014", 
+              "2016", 
+              "2018")
+reg<- c("Wal","Wal","Wal","Wal","Wal","Wal","Wal","Wal",
+        "Bel","Bel","Bel","Bel","Bel","Bel","Bel","Bel")
+sat$reg <- reg
+sat$satdem <- round(sat$stfdem.d*100, digits = 1)
+sat$ci_inf <- round(sat$ci_l*100, digits = 1)
+sat$ci_sup <- round(sat$ci_u*100, digits = 1)
+sat$ci_marge <- round((sat$ci_u - sat$ci_l)*100/2, digits = 1)
 
-
-#'incdice conifance dans les insitutions "trstinst": moyenne des 4 institutions et valeurs supérieure à 5 (échelle 0 à 10)
-# - parlement fédéral "trstprl"
-# - justice "trstlgl"
-# - femmes/hommes pol "trstplt"
-# - les partis pol "trstprt"
-
-#moyenne des 4 institutions
-library(tidyverse)
-BE <- transform( BE,
-                      trstinst.4m = rowMeans(subset(BE, select = c(trstprl,
-                                                                     trstplt,
-                                                                     trstprt,
-                                                                     trstlgl)), na.rm = FALSE))
-
-BE$trstinst.4d <-cut(BE$trstinst.4m,c(0,5,10), include.lowest = TRUE) #indice moyen dichotomisé <=5; >5
 
 
 ##indice satisfaction démocratique supérieur à 5 (échelle 0 à 10)
@@ -204,81 +229,7 @@ synt.wal18.rev <-svyby(~trstinst.4d, ~hinctnta_rec, subset(BE18w, BE18w$variable
 synt.wal18.rev$reg <- "Wallonie"
 
 
-#Fusion des deux
-synt.rev<-smartbind(synt.bel18.rev,synt.wal18.rev)    
-synt.rev$rev2<-c("1QB", "2QB", "3QB", "4QB", "5QB",
-                 "1QW", "2QW", "3QW", "4QW", "5QW"
-)
-synt.rev$rev2<- factor(synt.rev$rev2, levels = c("1QB", "2QB", "3QB", "4QB", "5QB",# pour mettre le facteur dans le bon ordre des modalités
-                                                 "1QW", "2QW", "3QW", "4QW", "5QW"
-))
-synt.rev$conf <- round(synt.rev$trstinst.4d*100, digits = 2)
-synt.rev$ci_inf <- round(synt.rev$ci_l*100, digits = 2)
-synt.rev$ci_sup <- round(synt.rev$ci_u*100, digits = 2)
-synt.rev$ci_marge <- round((synt.rev$ci_u - synt.rev$ci_l)*100/2, digits = 2)
 
-## Plot
-
-ggplot(synt.rev) +
-  geom_bar( aes(x=rev2, y=conf), stat="identity", fill="skyblue", width = 0.5) +
-  coord_cartesian(ylim=c(20,80)) + # pour limiter l'axe des x dans "geom_bar 
-  geom_errorbar( aes(x=rev2, ymin=ci_inf, ymax=ci_sup), width=0.4, colour="dark blue", alpha=0.9, size=1.3) +
-  xlab("Belgique                               Wallonie") +
-  ylab("Confiance politique")  +
-  geom_text(aes(x=rev2, y=conf, label = conf), size = 2.5,hjust = 1.2, vjust =- 1)
-
-
-
-
-#### 3) résultat confiance politique en croisant Sexe 
-synt.bel18.sex <-svyby(~trstinst.4d, ~gndr, BE18w, svyciprop, vartype="ci")
-synt.bel18.sex$reg <- "Belgique" # ajoute variable "région", modalité "Belgique""
-synt.wal18.sex <-svyby(~trstinst.4d, ~gndr, subset(BE18w, BE18w$variables$regbe ==3), svyciprop, vartype="ci") # subset pour avoir le calcul que pour la Wallonie
-synt.wal18.sex$reg <- "Wallonie"
-
-#Fusion des deux
-synt.sex<-smartbind(synt.bel18.sex, synt.wal18.sex)    
-synt.sex$sex<-c("B.H", "B.F", "W.H", "W.F")
-synt.sex$conf <- round(synt.sex$trstinst.4d*100, digits = 2)
-synt.sex$ci_inf <- round(synt.sex$ci_l*100, digits = 2)
-synt.sex$ci_sup <- round(synt.sex$ci_u*100, digits = 2)
-synt.sex$ci_marge <- round((synt.sex$ci_u - synt.sex$ci_l)*100/2, digits = 2)
-
-
-#Plot
-ggplot(synt.sex) +
-  geom_bar( aes(x=sex, y=conf), stat="identity", fill="skyblue", width = 0.5) +
-  coord_cartesian(ylim=c(20,80)) + # pour limiter l'axe des x dans "geom_bar 
-  geom_errorbar( aes(x=sex, ymin=ci_inf, ymax=ci_sup), width=0.4, colour="dark blue", alpha=0.9, size=1.3) +
-  xlab("Belgique                               Wallonie") +
-  ylab("Confiance politique")   +
-  geom_text(aes(x=sex, y=conf, label = conf), size = 2.5,hjust = 1.2, vjust =- 1)
-
-
-###4) résultat longitudinal "satisfaction démocratique"  
-
-sat.wal<-svyby(~stfdem.d, ~reg_ess, BEw, svyciprop, vartype="ci")
-sat.bel<-svyby(~stfdem.d, ~cntry_ess, BEw, svyciprop, vartype="ci")
-
-library(gtools) # fusion des 2 df à l'aide de smartbind
-sat<-smartbind(sat.wal, sat.bel)
-
-#ajoute les variables année, région, et recalcul les indice en % (2 digits)
-sat$year <- c("2004",   # ajoute la variable année
-              "2006", 
-              "2008", 
-              "2010", 
-              "2012",
-              "2014", 
-              "2016", 
-              "2018")
-reg<- c("Wal","Wal","Wal","Wal","Wal","Wal","Wal","Wal",
-        "Bel","Bel","Bel","Bel","Bel","Bel","Bel","Bel")
-sat$reg <- reg
-sat$satdem <- round(sat$stfdem.d*100, digits = 1)
-sat$ci_inf <- round(sat$ci_l*100, digits = 1)
-sat$ci_sup <- round(sat$ci_u*100, digits = 1)
-sat$ci_marge <- round((sat$ci_u - sat$ci_l)*100/2, digits = 1)
 
 # Plot
 sat %>%
