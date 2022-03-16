@@ -32,44 +32,6 @@ library(sjmisc)
 frq(BE02_18$regbe)
 
 
-## création de la varialbe "regyear" qui croise region et année
-
-BE02_18$regyear <- ifelse(BE02_18$regbe==1 & BE02_18$essround==1, "BXL02",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==2, "BXL04",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==3, "BXL06",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==4, "BXL08",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==5, "BXL10",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==6, "BXL12",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==7, "BXL14",     
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==8, "BXL16",
-              ifelse(BE02_18$regbe==1 & BE02_18$essround==9, "BXL18",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==1, "FLA02",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==2, "FLA04",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==3, "FLA06",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==4, "FLA08",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==5, "FLA10",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==6, "FLA12",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==7, "FLA14",     
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==8, "FLA16",
-              ifelse(BE02_18$regbe==2 & BE02_18$essround==9, "FLA18",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==1, "WAL02",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==2, "WAL04",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==3, "WAL06",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==4, "WAL08",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==5, "WAL10",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==6, "WAL12",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==7, "WAL14",     
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==8, "WAL16",
-              ifelse(BE02_18$regbe==3 & BE02_18$essround==9, "WAL18",
-              NA)))))))))))))))))))))))))))
-
-frq(BE02_18$regyear)
-
-
-
-#C) Faire une sous-parititon "BE" du dataframe BE02_18 qui ne contient pas la vague 02 (celle-ci ne comprend pas la variable "trstprt")
-
-BE <- subset(BE02_18, essround != 1) # fait un subset de BE02_18 en ne tenant compte que des années 04-18. La raison est que trust in political party (trstprt) n'est pas présent dans essround1
 
 
 # creation des indices ----------------------------------------------------
