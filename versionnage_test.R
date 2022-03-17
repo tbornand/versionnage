@@ -16,7 +16,7 @@ library(gtools) #smartbind fusion de df
 
 BE02_18 <- read_sav("ESS1-9e01_1.sav")
 
-
+#test2
 
 # creation des indices ----------------------------------------------------
 
